@@ -248,25 +248,27 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 			}
 
 			if (search) {
+				const normalizedSearch = { ...search }
+
 				if (hasColumn) {
-					if (!search.name) {
+					if (!normalizedSearch.name) {
 						if (typeof rest.dataIndex !== 'string') {
 							throw new TypeError('error: search.name 或 column.dataIndex 必须赋值且是字符串类型')
 						}
 
-						search.name = rest.dataIndex as string
+						normalizedSearch.name = rest.dataIndex as string
 					}
 
-					if (!search.label) {
+					if (!normalizedSearch.label) {
 						if (typeof rest.title !== 'string') {
 							throw new TypeError('error: search.label 或 column.title 必须赋值且是字符串类型')
 						}
 
-						search.label = rest.title as string
+						normalizedSearch.label = rest.title as string
 					}
 				}
 
-				formItems.push(search as NormalizedItem)
+				formItems.push(normalizedSearch as NormalizedItem)
 			}
 		})
 
