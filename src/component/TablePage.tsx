@@ -4,6 +4,7 @@ import {
 	useRef,
 	useState,
 	isValidElement,
+	type RefObject,
 	type PropsWithChildren,
 	type ReactElement,
 	type ReactNode
@@ -321,7 +322,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	 * 放在此处是方便设置 table 高度
 	 */
 	const [collapsed, setCollapsed] = useState(false)
-	const tableY = useScrollY(infiniteScroll, collapsed)
+	const tableY = useScrollY(tableElementRef, infiniteScroll, collapsed)
 	const mergedPaginationConfig =
 		typeof mergedTableProps.pagination === 'object' ? mergedTableProps.pagination : undefined
 	const resolvedPagination: TableProps<T>['pagination'] =
@@ -506,31 +507,103 @@ function isWindowContainer(container: ScrollContainer): container is Window {
 	return container === window
 }
 
-function useScrollY(infiniteScroll: boolean, collapsed: boolean) {
+function getPaddingBottom(element: Element | null | undefined) {
+	if (!(element instanceof HTMLElement)) {
+		return 0
+	}
+
+	const value = Number.parseInt(window.getComputedStyle(element).paddingBottom, 10)
+	return Number.isFinite(value) ? value : 0
+}
+
+function getVirtualScrollContainer(tableElement: HTMLDivElement) {
+	return tableElement.querySelector<HTMLElement>('.ant-table-tbody-virtual, .ant-table-placeholder')
+}
+
+function getTableScrollY(tableElement: HTMLDivElement) {
+	const scrollContainer = getVirtualScrollContainer(tableElement)
+	if (!scrollContainer) {
+		return undefined
+	}
+
+	const tablePage = tableElement.closest('#table-page')
+	const rect = scrollContainer.getBoundingClientRect()
+	const tablePaddingBottom = getPaddingBottom(tableElement)
+	const pagePaddingBottom = getPaddingBottom(tablePage?.parentElement)
+
+	return Math.max(window.innerHeight - rect.top - tablePaddingBottom - pagePaddingBottom, 0)
+}
+
+function useScrollY(tableElementRef: RefObject<HTMLDivElement | null>, infiniteScroll: boolean, collapsed: boolean) {
 	const location = useLocation()
 	const [tableY, setTableY] = useState<number>()
 
 	useEffect(() => {
-		if (infiniteScroll) {
-			setTimeout(() => {
-				const tableContainer = document.getElementById('tableWrapper')
-
-				// antd table 初始化时或者没数据时，挂载的是 ant-table-placeholder元素
-				const scrollContainer =
-					tableContainer?.querySelector('.ant-table-tbody-virtual') ||
-					tableContainer?.querySelector('.ant-table-placeholder')
-				const rect = scrollContainer!.getBoundingClientRect()!
-
-				const tablePb = Number.parseInt(window.getComputedStyle(tableContainer!).paddingBottom)
-
-				const tablePagePb = Number.parseInt(
-					window.getComputedStyle(document.getElementById('table-page')!.parentElement!).paddingBottom
-				)
-
-				setTableY(window.innerHeight - rect.top - tablePb - tablePagePb)
-			}, 10)
+		if (!infiniteScroll) {
+			setTableY(undefined)
+			return
 		}
-	}, [location, collapsed])
+
+		const tableElement = tableElementRef.current
+		if (!tableElement) {
+			return
+		}
+
+		let frameId = 0
+		let followupFrameId = 0
+		const resizeObserver = new ResizeObserver(() => {
+			scheduleMeasure()
+		})
+		const mutationObserver = new MutationObserver(() => {
+			scheduleMeasure()
+		})
+
+		const measure = () => {
+			const nextTableY = getTableScrollY(tableElement)
+			if (nextTableY != null) {
+				setTableY(nextTableY)
+			}
+		}
+
+		const scheduleMeasure = () => {
+			window.cancelAnimationFrame(frameId)
+			window.cancelAnimationFrame(followupFrameId)
+			frameId = window.requestAnimationFrame(() => {
+				followupFrameId = window.requestAnimationFrame(measure)
+			})
+		}
+
+		scheduleMeasure()
+		resizeObserver.observe(tableElement)
+
+		const tablePage = tableElement.closest('#table-page')
+		if (tablePage instanceof HTMLElement) {
+			resizeObserver.observe(tablePage)
+		}
+
+		if (tablePage?.parentElement instanceof HTMLElement) {
+			resizeObserver.observe(tablePage.parentElement)
+		}
+
+		const scrollContainer = getVirtualScrollContainer(tableElement)
+		if (scrollContainer) {
+			resizeObserver.observe(scrollContainer)
+		}
+
+		mutationObserver.observe(tableElement, {
+			childList: true,
+			subtree: true
+		})
+		window.addEventListener('resize', scheduleMeasure)
+
+		return () => {
+			window.cancelAnimationFrame(frameId)
+			window.cancelAnimationFrame(followupFrameId)
+			window.removeEventListener('resize', scheduleMeasure)
+			resizeObserver.disconnect()
+			mutationObserver.disconnect()
+		}
+	}, [tableElementRef, infiniteScroll, location, collapsed])
 
 	return tableY
 }
