@@ -193,9 +193,14 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	const actionRef = useRef<TableAction>('search')
 
 	function getChangedParameters(searchParams: URLSearchParams, extraQuery: QueryValues = {}) {
+		const defaultPageSize =
+			typeof resolvedPagination === 'object' && resolvedPagination.defaultPageSize
+				? resolvedPagination.defaultPageSize
+				: 10
+
 		const result: QueryValues = {
 			currentPage: 1,
-			pageSize: 10
+			pageSize: defaultPageSize
 		}
 		for (const [key, value] of searchParams) {
 			if (key[0] === '_') {
@@ -299,7 +304,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 					current: data.current,
 					pageSize: data.pageSize,
 					total: data.total
-			  }
+				}
 
 	return (
 		<div className={cl(className)} id="table-page">
@@ -370,11 +375,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 							const restCount = data.total % data.pageSize
 							const totalPages = (data.total - restCount) / data.pageSize + (restCount > 0 ? 1 : 0)
 							const hasNextPage = data.current < totalPages
-							if (
-								el.scrollHeight - el.scrollTop - el.clientHeight < 100 &&
-								hasNextPage &&
-								!mergedTableProps.loading
-							) {
+							if (el.scrollHeight - el.scrollTop - el.clientHeight < 100 && hasNextPage && !mergedTableProps.loading) {
 								actionRef.current = 'paginate'
 								const result = getChangedParameters(searchParams, {
 									currentPage: String(data.current + 1)
