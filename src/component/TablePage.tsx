@@ -25,14 +25,13 @@ type QueryValues = Record<string, string | number>
 type QueryInputValues = Record<string, unknown>
 
 function filter(values: QueryInputValues) {
-	Object.keys(values).forEach(key => {
-		const value = values[key]
-		if (value == '' || value == null) {
-			delete values[key]
+	return Object.entries(values).reduce((result, [key, value]) => {
+		if (value != '' && value != null) {
+			result[key] = value
 		}
-	})
 
-	return values
+		return result
+	}, {} as QueryInputValues)
 }
 
 function parseSummary(slot?: Summary | ReactElement | null): ReactNode {
