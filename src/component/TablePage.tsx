@@ -158,6 +158,21 @@ function getChangedParameters(searchParams: URLSearchParams, defaultPageSize: nu
 	}
 }
 
+function getColumnWidth(width: ColumnType<unknown>['width'], fallback = 180) {
+	if (typeof width === 'number' && Number.isFinite(width)) {
+		return width
+	}
+
+	if (typeof width === 'string') {
+		const parsed = Number.parseFloat(width)
+		if (Number.isFinite(parsed)) {
+			return parsed
+		}
+	}
+
+	return fallback
+}
+
 export default function TablePage<T = unknown>(props: PropsWithChildren<TablePageProps<T>>) {
 	const {
 		className,
@@ -273,7 +288,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 			const { search, ...rest } = column
 			const hasColumn = rest.dataIndex != null || rest.title != null
 			if (hasColumn) {
-				totalWidth += Number(rest.width || 180)
+				totalWidth += getColumnWidth(rest.width)
 
 				rest.align ||= 'center'
 				rest.showSorterTooltip ||= false
