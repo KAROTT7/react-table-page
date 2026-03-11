@@ -69,17 +69,24 @@ type TablePageDataSource<T> = Partial<TablePageData<T>> & Record<string, unknown
 
 type TableAction = 'paginate' | 'filter' | 'sort' | 'search'
 
+function normalizeNumber(value: unknown, fallback: number, min = 0) {
+	const parsed = Number(value)
+
+	if (!Number.isFinite(parsed) || parsed < min) {
+		return fallback
+	}
+
+	return parsed
+}
+
 function normalizeData<T>(data: TablePageDataSource<T> = {}, map: TableKeysMap = {}): TablePageData<T> {
-	const currentKey = map.current || 'current'
-	const pageSizeKey = map.pageSize || 'pageSize'
-	const totalKey = map.total || 'total'
-	const listKey = map.list || 'list'
-	const listValue = data[listKey]
+	const { current = 'current', pageSize = 'pageSize', total = 'total', list = 'list' } = map
+	const listValue = data[list]
 
 	return {
-		current: Number(data[currentKey] ?? 1) || 1,
-		pageSize: Number(data[pageSizeKey] ?? 10) || 10,
-		total: Number(data[totalKey] ?? 10) || 10,
+		current: normalizeNumber(data[current], 1, 1),
+		pageSize: normalizeNumber(data[pageSize], 10, 1),
+		total: normalizeNumber(data[total], 0, 0),
 		list: Array.isArray(listValue) ? (listValue as T[]) : []
 	}
 }
@@ -114,6 +121,7 @@ interface TablePageProps<T> {
 	/** Antd Form 属性 */
 	formProps?: AntdFormProps
 }
+
 function toSearchParamsInit(values: Record<string, unknown>) {
 	return Object.entries(values).reduce(
 		(result, [key, value]) => {
@@ -145,8 +153,35 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	} = props
 
 	const { tableConfig, tableDataMap, getContainer = () => document.body } = useTablePageConfig()
+	const mergedTableProps = useMemo(() => {
+		const resolvedTableConfig = (tableConfig || {}) as Omit<
+			TableProps<T>,
+			'columns' | 'dataSource' | 'onChange' | 'scroll' | 'onScroll'
+		>
 
-	const infiniteScroll = !!tableProps?.virtual || !!tableConfig?.virtual
+		const resolvedPagination = (() => {
+			if (tableProps.pagination === false) {
+				return false
+			}
+
+			if (resolvedTableConfig.pagination === false) {
+				return tableProps.pagination ?? false
+			}
+
+			return {
+				...(resolvedTableConfig.pagination || {}),
+				...(tableProps.pagination || {})
+			}
+		})()
+
+		return {
+			...resolvedTableConfig,
+			...tableProps,
+			pagination: resolvedPagination
+		}
+	}, [tableConfig, tableProps])
+
+	const infiniteScroll = !!mergedTableProps.virtual
 	const container = getContainer()
 
 	const [searchParams, setSearchParams] = useSearchParams()
@@ -154,10 +189,6 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	const location = useLocation()
 
 	const data = normalizeData(tableData, tableDataMap)
-	const resolvedTableConfig = tableConfig as Omit<
-		TableProps<T>,
-		'columns' | 'dataSource' | 'onChange' | 'scroll' | 'onScroll'
-	>
 	const tableElementRef = useRef<HTMLDivElement>(null)
 	const actionRef = useRef<TableAction>('search')
 
@@ -252,6 +283,23 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	 */
 	const [collapsed, setCollapsed] = useState(false)
 	const tableY = useScrollY(infiniteScroll, collapsed)
+	const mergedPaginationConfig =
+		typeof mergedTableProps.pagination === 'object' ? mergedTableProps.pagination : undefined
+	const resolvedPagination: TableProps<T>['pagination'] =
+		infiniteScroll || mergedTableProps.pagination === false
+			? false
+			: {
+					rootClassName: '!mb-0',
+					showQuickJumper: true,
+					size: 'default',
+					showTotal: (t: number) => `总计 ${t} 条`,
+					hideOnSinglePage: true,
+					position: ['bottomCenter'] as const,
+					...(mergedPaginationConfig || {}),
+					current: data.current,
+					pageSize: data.pageSize,
+					total: data.total
+			  }
 
 	return (
 		<div className={cl(className)} id="table-page">
@@ -308,8 +356,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 			>
 				{parseSummary(summary)}
 				<Table
-					{...resolvedTableConfig}
-					{...tableProps}
+					{...mergedTableProps}
 					scroll={{
 						x: totalWidth,
 						y: tableY
@@ -323,7 +370,11 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 							const restCount = data.total % data.pageSize
 							const totalPages = (data.total - restCount) / data.pageSize + (restCount > 0 ? 1 : 0)
 							const hasNextPage = data.current < totalPages
-							if (el.scrollHeight - el.scrollTop - el.clientHeight < 100 && hasNextPage && !tableProps.loading) {
+							if (
+								el.scrollHeight - el.scrollTop - el.clientHeight < 100 &&
+								hasNextPage &&
+								!mergedTableProps.loading
+							) {
 								actionRef.current = 'paginate'
 								const result = getChangedParameters(searchParams, {
 									currentPage: String(data.current + 1)
@@ -373,22 +424,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 							)
 						}
 					}}
-					pagination={
-						infiniteScroll
-							? false
-							: {
-									rootClassName: '!mb-0',
-									showQuickJumper: true,
-									size: 'default',
-									showTotal: t => `总计 ${t} 条`,
-									hideOnSinglePage: true,
-									position: ['bottomCenter'],
-									...(tableConfig?.pagination || {}),
-									current: data.current,
-									pageSize: data.pageSize,
-									total: data.total
-								}
-					}
+					pagination={resolvedPagination}
 				/>
 			</div>
 		</div>
@@ -423,3 +459,4 @@ function useScrollY(infiniteScroll: boolean, collapsed: boolean) {
 
 	return tableY
 }
+
