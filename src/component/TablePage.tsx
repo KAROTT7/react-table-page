@@ -138,6 +138,26 @@ function toSearchParamsInit(values: Record<string, unknown>) {
 	)
 }
 
+function getChangedParameters(searchParams: URLSearchParams, defaultPageSize: number, extraQuery: QueryValues = {}) {
+	const result: QueryValues = {
+		currentPage: 1,
+		pageSize: defaultPageSize
+	}
+
+	for (const [key, value] of searchParams) {
+		if (key[0] === '_') {
+			result[key.slice(1)] = value
+		} else {
+			result[key] = value
+		}
+	}
+
+	return {
+		...result,
+		...extraQuery
+	}
+}
+
 export default function TablePage<T = unknown>(props: PropsWithChildren<TablePageProps<T>>) {
 	const {
 		className,
@@ -194,6 +214,9 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	const actionRef = useRef<TableAction>('search')
 	const pendingInfinitePageRef = useRef<number | null>(null)
 	const pendingInfinitePageTimerRef = useRef<number | null>(null)
+	const mergedPaginationConfig =
+		typeof mergedTableProps.pagination === 'object' ? mergedTableProps.pagination : undefined
+	const defaultPageSize = mergedPaginationConfig?.defaultPageSize ?? 10
 
 	function clearPendingInfinitePage() {
 		pendingInfinitePageRef.current = null
@@ -213,35 +236,11 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 		}, 1500)
 	}
 
-	function getChangedParameters(searchParams: URLSearchParams, extraQuery: QueryValues = {}) {
-		const defaultPageSize =
-			typeof resolvedPagination === 'object' && resolvedPagination.defaultPageSize
-				? resolvedPagination.defaultPageSize
-				: 10
-
-		const result: QueryValues = {
-			currentPage: 1,
-			pageSize: defaultPageSize
-		}
-		for (const [key, value] of searchParams) {
-			if (key[0] === '_') {
-				result[key.slice(1)] = value
-			} else {
-				result[key] = value
-			}
-		}
-
-		return {
-			...result,
-			...extraQuery
-		}
-	}
-
 	useEffect(() => {
-		const result = getChangedParameters(searchParams)
+		const result = getChangedParameters(searchParams, defaultPageSize)
 
 		onChange?.(result, actionRef.current)
-	}, [searchParams, location])
+	}, [searchParams, location, defaultPageSize])
 
 	useEffect(() => {
 		if (!infiniteScroll && actionRef.current === 'paginate' && tableElementRef.current && scrollToTop !== false) {
@@ -322,8 +321,6 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	 */
 	const [collapsed, setCollapsed] = useState(false)
 	const tableY = useScrollY(tableElementRef, infiniteScroll, collapsed)
-	const mergedPaginationConfig =
-		typeof mergedTableProps.pagination === 'object' ? mergedTableProps.pagination : undefined
 	const resolvedPagination: TableProps<T>['pagination'] =
 		infiniteScroll || mergedTableProps.pagination === false
 			? false
@@ -420,7 +417,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 							) {
 								actionRef.current = 'paginate'
 								markPendingInfinitePage(nextPage)
-								const result = getChangedParameters(searchParams, {
+								const result = getChangedParameters(searchParams, defaultPageSize, {
 									currentPage: String(nextPage)
 								})
 
