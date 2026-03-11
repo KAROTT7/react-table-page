@@ -225,6 +225,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	const location = useLocation()
 
 	const data = normalizeData(tableData, tableDataMap)
+	const tablePageRef = useRef<HTMLDivElement>(null)
 	const tableElementRef = useRef<HTMLDivElement>(null)
 	const actionRef = useRef<TableAction>('search')
 	const pendingInfinitePageRef = useRef<number | null>(null)
@@ -335,7 +336,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	 * 放在此处是方便设置 table 高度
 	 */
 	const [collapsed, setCollapsed] = useState(false)
-	const tableY = useScrollY(tableElementRef, infiniteScroll, collapsed)
+	const tableY = useScrollY(tablePageRef, tableElementRef, infiniteScroll, collapsed)
 	const resolvedPagination: TableProps<T>['pagination'] =
 		infiniteScroll || mergedTableProps.pagination === false
 			? false
@@ -353,7 +354,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 				}
 
 	return (
-		<div className={cl(className)} id="table-page">
+		<div ref={tablePageRef} className={cl(className)}>
 			{formItems.length ? (
 				<SearchForm
 					ref={searchRef}
@@ -402,7 +403,6 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 			) : null}
 			<div
 				ref={tableElementRef}
-				id="tableWrapper"
 				className={cl('p-4 bg-white shadow-sm rounded', tableWrapperClass, infiniteScroll ? 'flex-1' : '')}
 			>
 				{parseSummary(summary)}
@@ -531,21 +531,25 @@ function getVirtualScrollContainer(tableElement: HTMLDivElement) {
 	return tableElement.querySelector<HTMLElement>('.ant-table-tbody-virtual, .ant-table-placeholder')
 }
 
-function getTableScrollY(tableElement: HTMLDivElement) {
+function getTableScrollY(tablePageElement: HTMLDivElement | null, tableElement: HTMLDivElement) {
 	const scrollContainer = getVirtualScrollContainer(tableElement)
 	if (!scrollContainer) {
 		return undefined
 	}
 
-	const tablePage = tableElement.closest('#table-page')
 	const rect = scrollContainer.getBoundingClientRect()
 	const tablePaddingBottom = getPaddingBottom(tableElement)
-	const pagePaddingBottom = getPaddingBottom(tablePage?.parentElement)
+	const pagePaddingBottom = getPaddingBottom(tablePageElement?.parentElement)
 
 	return Math.max(window.innerHeight - rect.top - tablePaddingBottom - pagePaddingBottom, 0)
 }
 
-function useScrollY(tableElementRef: RefObject<HTMLDivElement | null>, infiniteScroll: boolean, collapsed: boolean) {
+function useScrollY(
+	tablePageRef: RefObject<HTMLDivElement | null>,
+	tableElementRef: RefObject<HTMLDivElement | null>,
+	infiniteScroll: boolean,
+	collapsed: boolean
+) {
 	const location = useLocation()
 	const [tableY, setTableY] = useState<number>()
 
@@ -560,6 +564,8 @@ function useScrollY(tableElementRef: RefObject<HTMLDivElement | null>, infiniteS
 			return
 		}
 
+		const tablePageElement = tablePageRef.current
+
 		let frameId = 0
 		let followupFrameId = 0
 		const resizeObserver = new ResizeObserver(() => {
@@ -570,7 +576,7 @@ function useScrollY(tableElementRef: RefObject<HTMLDivElement | null>, infiniteS
 		})
 
 		const measure = () => {
-			const nextTableY = getTableScrollY(tableElement)
+			const nextTableY = getTableScrollY(tablePageElement, tableElement)
 			if (nextTableY != null) {
 				setTableY(nextTableY)
 			}
@@ -587,13 +593,12 @@ function useScrollY(tableElementRef: RefObject<HTMLDivElement | null>, infiniteS
 		scheduleMeasure()
 		resizeObserver.observe(tableElement)
 
-		const tablePage = tableElement.closest('#table-page')
-		if (tablePage instanceof HTMLElement) {
-			resizeObserver.observe(tablePage)
+		if (tablePageElement instanceof HTMLElement) {
+			resizeObserver.observe(tablePageElement)
 		}
 
-		if (tablePage?.parentElement instanceof HTMLElement) {
-			resizeObserver.observe(tablePage.parentElement)
+		if (tablePageElement?.parentElement instanceof HTMLElement) {
+			resizeObserver.observe(tablePageElement.parentElement)
 		}
 
 		const scrollContainer = getVirtualScrollContainer(tableElement)
@@ -614,7 +619,7 @@ function useScrollY(tableElementRef: RefObject<HTMLDivElement | null>, infiniteS
 			resizeObserver.disconnect()
 			mutationObserver.disconnect()
 		}
-	}, [tableElementRef, infiniteScroll, location, collapsed])
+	}, [tablePageRef, tableElementRef, infiniteScroll, location, collapsed])
 
 	return tableY
 }
