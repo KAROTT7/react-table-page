@@ -192,6 +192,26 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	const data = normalizeData(tableData, tableDataMap)
 	const tableElementRef = useRef<HTMLDivElement>(null)
 	const actionRef = useRef<TableAction>('search')
+	const pendingInfinitePageRef = useRef<number | null>(null)
+	const pendingInfinitePageTimerRef = useRef<number | null>(null)
+
+	function clearPendingInfinitePage() {
+		pendingInfinitePageRef.current = null
+
+		if (pendingInfinitePageTimerRef.current != null) {
+			window.clearTimeout(pendingInfinitePageTimerRef.current)
+			pendingInfinitePageTimerRef.current = null
+		}
+	}
+
+	function markPendingInfinitePage(page: number) {
+		clearPendingInfinitePage()
+		pendingInfinitePageRef.current = page
+		pendingInfinitePageTimerRef.current = window.setTimeout(() => {
+			pendingInfinitePageRef.current = null
+			pendingInfinitePageTimerRef.current = null
+		}, 1500)
+	}
 
 	function getChangedParameters(searchParams: URLSearchParams, extraQuery: QueryValues = {}) {
 		const defaultPageSize =
@@ -229,6 +249,21 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 			scrollToTableTop(container, tableElementRef.current, offsetTop, scrollToTop)
 		}
 	}, [data, getContainer, scrollToTop, infiniteScroll, offsetTop])
+
+	useEffect(() => {
+		if (!infiniteScroll) {
+			clearPendingInfinitePage()
+			return
+		}
+
+		if (pendingInfinitePageRef.current != null && data.current >= pendingInfinitePageRef.current) {
+			clearPendingInfinitePage()
+		}
+
+		return () => {
+			clearPendingInfinitePage()
+		}
+	}, [data.current, infiniteScroll])
 
 	const { tableColumns, formItems, totalWidth } = useMemo(() => {
 		const tableColumns: ColumnType<T>[] = []
@@ -374,10 +409,19 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 							const restCount = data.total % data.pageSize
 							const totalPages = (data.total - restCount) / data.pageSize + (restCount > 0 ? 1 : 0)
 							const hasNextPage = data.current < totalPages
-							if (el.scrollHeight - el.scrollTop - el.clientHeight < 100 && hasNextPage && !mergedTableProps.loading) {
+							const nextPage = data.current + 1
+							const isPendingPage = pendingInfinitePageRef.current === nextPage
+
+							if (
+								el.scrollHeight - el.scrollTop - el.clientHeight < 100 &&
+								hasNextPage &&
+								!mergedTableProps.loading &&
+								!isPendingPage
+							) {
 								actionRef.current = 'paginate'
+								markPendingInfinitePage(nextPage)
 								const result = getChangedParameters(searchParams, {
-									currentPage: String(data.current + 1)
+									currentPage: String(nextPage)
 								})
 
 								onChange?.(result, actionRef.current)
