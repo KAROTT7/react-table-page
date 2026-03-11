@@ -122,6 +122,8 @@ interface TablePageProps<T> {
 	formProps?: AntdFormProps
 }
 
+type ScrollContainer = HTMLElement | Window
+
 function toSearchParamsInit(values: Record<string, unknown>) {
 	return Object.entries(values).reduce(
 		(result, [key, value]) => {
@@ -152,7 +154,7 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 		formProps = {}
 	} = props
 
-	const { tableConfig, tableDataMap, getContainer = () => document.body } = useTablePageConfig()
+	const { tableConfig, tableDataMap, getContainer } = useTablePageConfig()
 	const mergedTableProps = useMemo(() => {
 		const resolvedTableConfig = (tableConfig || {}) as Omit<
 			TableProps<T>,
@@ -182,7 +184,6 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 	}, [tableConfig, tableProps])
 
 	const infiniteScroll = !!mergedTableProps.virtual
-	const container = getContainer()
 
 	const [searchParams, setSearchParams] = useSearchParams()
 	// 用于相同 searchParams 时，点击 search 刷新页面
@@ -224,14 +225,10 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 
 	useEffect(() => {
 		if (!infiniteScroll && actionRef.current === 'paginate' && tableElementRef.current && scrollToTop !== false) {
-			container?.scrollTo(
-				0,
-				typeof scrollToTop === 'function'
-					? scrollToTop(tableElementRef.current)
-					: tableElementRef.current.offsetTop - offsetTop
-			)
+			const container = getContainer?.() ?? window
+			scrollToTableTop(container, tableElementRef.current, offsetTop, scrollToTop)
 		}
-	}, [data, scrollToTop, infiniteScroll, offsetTop])
+	}, [data, getContainer, scrollToTop, infiniteScroll, offsetTop])
 
 	const { tableColumns, formItems, totalWidth } = useMemo(() => {
 		const tableColumns: ColumnType<T>[] = []
@@ -430,6 +427,37 @@ export default function TablePage<T = unknown>(props: PropsWithChildren<TablePag
 			</div>
 		</div>
 	)
+}
+
+function scrollToTableTop(
+	container: ScrollContainer,
+	tableElement: HTMLDivElement,
+	offsetTop: number,
+	scrollToTop: boolean | ((tableElement: HTMLDivElement) => number)
+) {
+	const nextTop =
+		typeof scrollToTop === 'function' ? scrollToTop(tableElement) : getTableTop(tableElement, container) - offsetTop
+
+	if ('scrollTo' in container) {
+		container.scrollTo({
+			top: nextTop
+		})
+	}
+}
+
+function getTableTop(tableElement: HTMLDivElement, container: ScrollContainer) {
+	if (isWindowContainer(container)) {
+		return window.scrollY + tableElement.getBoundingClientRect().top
+	}
+
+	const containerRect = container.getBoundingClientRect()
+	const tableRect = tableElement.getBoundingClientRect()
+
+	return container.scrollTop + tableRect.top - containerRect.top
+}
+
+function isWindowContainer(container: ScrollContainer): container is Window {
+	return container === window
 }
 
 function useScrollY(infiniteScroll: boolean, collapsed: boolean) {
