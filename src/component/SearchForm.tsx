@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react'
 import cl from 'classnames'
-import { Row, Col, Form, Button } from 'antd'
+import { Row, Col, Form, Button, Space } from 'antd'
 import { DownOutlined, UpOutlined } from '@ant-design/icons'
 import type { InputProps, TextAreaProps } from 'antd/es/input'
 import type { FormProps, FormInstance } from 'antd/es/form'
@@ -245,7 +245,7 @@ const SearchForm = forwardRef<any, SearchFormProps<any>>((props, ref) => {
 					{hiddenFormButtons ? null : (
 						<Col span={span}>
 							<Form.Item className="mb-0">
-								<Button.Group>
+								<Space.Compact>
 									<Button type="primary" htmlType="submit">
 										{globalConfig.searchText}
 									</Button>
@@ -257,7 +257,7 @@ const SearchForm = forwardRef<any, SearchFormProps<any>>((props, ref) => {
 									>
 										{globalConfig.clearText}
 									</Button>
-								</Button.Group>
+								</Space.Compact>
 								{finalItems.length >= maxItemsPerLine && enableFormCollapse ? (
 									<Button type="link" onClick={() => setCollapsed(s => !s)}>
 										{collapsed ? globalConfig.expandText : globalConfig.closeText}
@@ -316,3 +316,4 @@ function getInitialValues(
 		...result
 	}
 }
+
