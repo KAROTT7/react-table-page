@@ -11,13 +11,16 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   prettierConfig,
   {
-    files: ['**/*.{js,mjs,cjs,ts}'],
+    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
         ...globals.node
       }
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off'
     }
   },
   {

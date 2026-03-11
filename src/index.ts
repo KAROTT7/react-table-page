@@ -1,9 +1,3 @@
-export interface GreetingOptions {
-	uppercase?: boolean;
-}
+export { TablePageConfig } from './component'
+export { default, type TableColumn } from './component'
 
-export function createGreeting(name: string, options: GreetingOptions = {}): string {
-	const message = `Hello, ${name}!`;
-
-	return options.uppercase ? message.toUpperCase() : message;
-}

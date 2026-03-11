@@ -1,62 +1,93 @@
 {
-  "name": "react-table-page",
-  "version": "0.1.0",
-  "description": "A JavaScript library scaffold built with Rollup and TypeScript.",
-  "packageManager": "pnpm@10.18.1",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "sideEffects": false,
-  "scripts": {
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "clean": "rimraf dist",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "lint": "eslint .",
-    "preinstall": "node ./scripts/enforce-pnpm.mjs",
-    "prepublishOnly": "pnpm check",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18",
-    "pnpm": ">=10.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.22.0",
-    "@rollup/plugin-commonjs": "^28.0.2",
-    "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^12.1.2",
-    "eslint": "^9.22.0",
-    "eslint-config-prettier": "^10.1.1",
-    "globals": "^16.0.0",
-    "prettier": "^3.5.3",
-    "rollup": "^4.34.9",
-    "rollup-plugin-dts": "^6.1.1",
-    "rimraf": "^6.0.1",
-    "tslib": "^2.8.1",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.26.1",
-    "vitest": "^3.0.8"
-  }
+	"name": "react-table-page",
+	"version": "0.1.0",
+	"description": "A React table page component library for admin list views with integrated search forms, pagination, and URL query sync.",
+	"packageManager": "pnpm@10.18.1",
+	"type": "module",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./component": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"sideEffects": false,
+	"scripts": {
+		"check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+		"build": "rollup -c",
+		"dev": "rollup -c -w",
+		"clean": "rimraf dist",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"lint": "eslint .",
+		"preinstall": "node ./scripts/enforce-pnpm.mjs",
+		"prepublishOnly": "pnpm check",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc -p tsconfig.json --noEmit"
+	},
+	"keywords": [
+		"react",
+		"antd",
+		"table",
+		"table-page",
+		"admin",
+		"search-form",
+		"pagination",
+		"component-library",
+		"typescript"
+	],
+	"author": "",
+	"license": "MIT",
+	"engines": {
+		"node": ">=18",
+		"pnpm": ">=10.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"peerDependencies": {
+		"antd": ">=5.10.0",
+		"react": ">=16.9.0",
+		"react-dom": ">=16.9.0",
+		"react-router-dom": ">=6.9"
+	},
+	"dependencies": {
+		"@ant-design/icons": "^6.1.0",
+		"classnames": "^2.5.1",
+		"dayjs": "^1.11.13"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.22.0",
+		"@rollup/plugin-commonjs": "^28.0.2",
+		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@rollup/plugin-terser": "^0.4.4",
+		"@rollup/plugin-typescript": "^12.1.2",
+		"@types/react": "^19.1.13",
+		"@types/react-dom": "^19.1.9",
+		"antd": "^5.27.5",
+		"eslint": "^9.22.0",
+		"eslint-config-prettier": "^10.1.1",
+		"globals": "^16.0.0",
+		"prettier": "^3.5.3",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-router-dom": "^7.8.2",
+		"rimraf": "^6.0.1",
+		"rollup": "^4.34.9",
+		"rollup-plugin-dts": "^6.1.1",
+		"tslib": "^2.8.1",
+		"typescript": "^5.7.3",
+		"typescript-eslint": "^8.26.1",
+		"vitest": "^3.0.8"
+	}
 }

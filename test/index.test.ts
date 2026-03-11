@@ -1,13 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import { createGreeting } from '../src/index';
+import TablePage, { TablePageConfig } from '../src/index'
 
-describe('createGreeting', () => {
-  it('returns a greeting with the given name', () => {
-    expect(createGreeting('world')).toBe('Hello, world!');
-  });
+describe('package root exports', () => {
+	it('exports the default TablePage component', () => {
+		expect(TablePage).toBeDefined()
+	})
 
-  it('supports uppercase output', () => {
-    expect(createGreeting('world', { uppercase: true })).toBe('HELLO, WORLD!');
-  });
-});
+	it('exports the TablePageConfig provider', () => {
+		expect(TablePageConfig).toBeDefined()
+	})
+})
