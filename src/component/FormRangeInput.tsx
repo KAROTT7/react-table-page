@@ -78,6 +78,7 @@ function RangeInput(props: RangeInputProps) {
 	return (
 		<Space.Compact>
 			<Input
+				allowClear
 				className={inputClass}
 				placeholder="Minimum"
 				value={values && values[0] ? values[0] : ''}
@@ -87,7 +88,8 @@ function RangeInput(props: RangeInputProps) {
 			/>
 			<Input className="!bg-white w-12 border-l-0 pointer-events-none" placeholder="~" disabled />
 			<Input
-				className={classNames(inputClass, 'border-l-transparent')}
+				allowClear
+				className={classNames(inputClass, '')}
 				placeholder="Maximum"
 				value={values && values[1] ? values[1] : ''}
 				onChange={onMaxChange}

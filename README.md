@@ -26,6 +26,7 @@ pnpm install
 - `react-dom`
 - `react-router-dom`
 - `antd`
+- `tailwindcss >= 3`
 
 库内已包含这些运行时依赖：
 
@@ -39,12 +40,6 @@ pnpm install
 
 ```ts
 import TablePage, { TablePageConfig, type TableColumn } from 'react-table-page'
-```
-
-也支持子路径导出：
-
-```ts
-import TablePage, { TablePageConfig } from 'react-table-page/component'
 ```
 
 ## 快速开始
@@ -112,6 +107,7 @@ export default function UserPage() {
 
 - 组件运行在 `react-router-dom` 路由上下文内
 - 项目使用 TypeScript 时需要开启 JSX 支持
+- 组件样式依赖 Tailwind CSS 3 及以上版本，使用方项目需要已接入 Tailwind
 - 表格默认 `rowKey` 为 `id`，如果主键字段不同，需要自行覆盖
 
 ## 详细文档
@@ -127,6 +123,23 @@ export default function UserPage() {
 - `pnpm test`：执行 Vitest
 - `pnpm typecheck`：执行 TypeScript 类型检查
 - `pnpm check`：执行完整发布前校验
+
+## 本地联调
+
+仓库内置了一个基于 Vite 的 playground，用来在真实浏览器环境下验证查询、分页、排序和 URL 参数同步。
+
+```bash
+cd playground
+pnpm dev
+```
+
+可用命令：
+
+- `pnpm dev`：启动 playground
+- `pnpm build`：构建 playground
+- `pnpm preview`：预览 playground 构建产物
+
+playground 会直接引用当前仓库里的本地源码，所以你修改 `src/component` 后刷新页面即可验证效果。
 
 ## 发布
 

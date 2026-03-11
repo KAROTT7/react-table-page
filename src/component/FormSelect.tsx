@@ -14,18 +14,12 @@ export default function FormSelect(props: FormSelectProps) {
 	return (
 		<div className="relative">
 			{label && (
-				<FormLabel
-					focus={focus}
-					required={required}
-				>
+				<FormLabel focus={focus} required={required}>
 					{label}
 				</FormLabel>
 			)}
-			<Select
-				{...rest}
-				onFocus={() => setFocus(true)}
-				onBlur={() => setFocus(false)}
-			/>
+			<Select allowClear {...rest} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} />
 		</div>
 	)
 }
+

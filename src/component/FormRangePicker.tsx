@@ -17,16 +17,14 @@ export default function FormRangePicker(props: FormRangePickerProps & RangePicke
 	return (
 		<div className="relative">
 			{label && (
-				<FormLabel
-					focus={focus}
-					required={required}
-				>
+				<FormLabel focus={focus} required={required}>
 					{label}
 				</FormLabel>
 			)}
 
 			<RangePicker
 				className="w-full"
+				allowClear
 				{...rest}
 				onFocus={() => setFocus(true)}
 				onBlur={() => setFocus(false)}
@@ -34,3 +32,4 @@ export default function FormRangePicker(props: FormRangePickerProps & RangePicke
 		</div>
 	)
 }
+

@@ -255,9 +255,7 @@ export function getElement(
 
 	let element: ReactNode
 	if (type === 'rangePicker') {
-		element = (
-			<FormRangePicker allowClear placeholder={globalConfig.rangePickerPlaceholder} {...elementProps} label={label} />
-		)
+		element = <FormRangePicker placeholder={globalConfig.rangePickerPlaceholder} {...elementProps} label={label} />
 	} else if (type === 'select') {
 		const isMultiple = elementProps?.mode === 'multiple'
 		const enums = typeof item.enums === 'function' ? item.enums(values) : item.enums
@@ -265,7 +263,6 @@ export function getElement(
 
 		element = (
 			<FormSelect
-				allowClear
 				{...elementProps}
 				label={label}
 				placeholder={isMultiple ? globalConfig.selectAllText : elementProps?.placeholder}
@@ -273,11 +270,11 @@ export function getElement(
 			/>
 		)
 	} else if (type === 'datePicker') {
-		element = <FormDatePicker allowClear placeholder="Select Date" {...elementProps} label={label} />
+		element = <FormDatePicker placeholder="Select Date" {...elementProps} label={label} />
 	} else if (type === 'textarea') {
-		element = <FormInputTextarea allowClear {...elementProps} label={label} />
+		element = <FormInputTextarea {...elementProps} label={label} />
 	} else if (type === 'input') {
-		element = <FormInput allowClear {...elementProps} label={label} />
+		element = <FormInput {...elementProps} label={label} />
 	} else if (type === 'rangeInput') {
 		element = <FormRangeInput label={label!} />
 	} else if (type === 'custom') {

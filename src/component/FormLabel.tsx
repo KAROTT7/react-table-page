@@ -18,4 +18,3 @@ export default function FormLabel(props: PropsWithChildren<FormLabelProps>) {
 		</span>
 	)
 }
-

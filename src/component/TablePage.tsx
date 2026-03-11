@@ -423,4 +423,3 @@ function useScrollY(infiniteScroll: boolean, collapsed: boolean) {
 
 	return tableY
 }
-

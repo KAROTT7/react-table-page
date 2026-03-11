@@ -197,6 +197,7 @@ onChange?(query: Record<string, string | number>, action: 'paginate' | 'filter' 
 ## 当前实现依赖与注意事项
 
 - 依赖 `react`、`react-router-dom`、`antd`、`dayjs`、`classnames`、`@ant-design/icons`
+- 组件样式依赖 `tailwindcss >= 3`
 - 入口文件会执行 `dayjs.extend(utc)`，因此时间区间查询默认具备 UTC 转换能力
 - 当前组件源码使用 `.tsx`，项目 TypeScript 配置需要开启 JSX 支持
 - 表格默认 `rowKey` 是 `id`，如果数据主键不是 `id`，建议通过 `TablePageConfig.tableConfig.rowKey` 或 `tableProps.rowKey` 覆盖

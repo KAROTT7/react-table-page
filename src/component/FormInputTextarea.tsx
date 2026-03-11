@@ -15,18 +15,12 @@ export default function FormInputTextarea(props: FormInputTextareaProps) {
 	return (
 		<div className="relative">
 			{label && (
-				<FormLabel
-					focus={focus}
-					required={required}
-				>
+				<FormLabel focus={focus} required={required}>
 					{label}
 				</FormLabel>
 			)}
-			<Input.TextArea
-				{...rest}
-				onFocus={() => setFocus(true)}
-				onBlur={() => setFocus(false)}
-			/>
+			<Input.TextArea allowClear {...rest} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} />
 		</div>
 	)
 }
+
